@@ -15,8 +15,6 @@ LPNPETSEC_INIT Init;
 LPNPETSEC_DPPITEMSIZE DppItemSize;
 LPNPETSEC_UNLOCKSIMLOCK UnlockSimlock;
 LPNPETSEC_GETSIMLOCKSTATUS GetSimlockStatus;
-LPNPETSEC_DPPITEMREAD DppItemRead;
-LPNPETSEC_VALIDATEMULTISIM ValidateMultiSim;
 LPNPETSEC_DEINIT Deinit;
 
 std::string ToString(__int64 obj)
@@ -27,7 +25,7 @@ std::string ToString(__int64 obj)
 	return strValue;
 }
 
-__int64 NPETSEC_Init(__int64 val1) 
+__int64 NPETSEC_Init(__int64 val1)
 {
 	// Initialize stubbed library entry points
 	hDLL = LoadLibrary(L"NPETSEC2.DLL");
@@ -51,7 +49,6 @@ __int64 NPETSEC_Init(__int64 val1)
 	logFile << "Bypassing error by returning 0";
 
 	logFile << "\n";
-	logFile.close();
 
 	return 0;//ret;
 }
@@ -135,62 +132,266 @@ __int64 NPETSEC_GetSimlockStatus(__int64 val1)
 	return 0;//ret;
 }
 
-__int64 NPETSEC_DppItemRead(unsigned int a1, unsigned int a2, __int64 a3, unsigned int a4)
+__int64 NPETSEC_DppItemRead(unsigned long long itemId, unsigned long long loggingflag, char* outputBuffer, unsigned long long bytecount)
 {
-	LPNPETSEC_DPPITEMREAD DppItemRead = (LPNPETSEC_DPPITEMREAD)GetProcAddress((HMODULE)hDLL, "NPETSEC_DppItemRead");
-
 	logFile.open("C:\\RIL_NPETSEC.txt", std::ofstream::out | std::ofstream::app);
+
 	logFile << "> NPETSEC_DppItemRead";
 	logFile << "\n";
-	logFile << a1;
+	logFile << "Item ID: ";
+	logFile << itemId;
 	logFile << "\n";
-	logFile << a2;
+	logFile << "Logging flag: ";
+	logFile << loggingflag;
 	logFile << "\n";
-	logFile << ToString(a3);
+	logFile << "Byte count: ";
+	logFile << bytecount;
+
+	string filePath;
+
+	switch (itemId)
+	{
+		case 0:
+		{
+			filePath = "\\Microsoft\\Microsoft.PVK";
+			break;
+		}
+		case 1:
+		{
+			filePath = "\\QCOM\\BT.Provision";
+			break;
+		}
+		case 2:
+		{
+			filePath = "\\QCOM\\WLAN.Provision";
+			break;
+		}
+		case 3:
+		{
+			filePath = "\\MMO\\CoverColor.txt";
+			break;
+		}
+		case 4:
+		{
+			filePath = "\\MMO\\customer_nvi_log.txt";
+			break;
+		}
+		case 5:
+		{
+			filePath = "\\MMO\\simlock\\sign";
+			break;
+		}
+		case 6:
+		{
+			filePath = "\\MMO\\simlock\\keys";
+			break;
+		}
+		case 7:
+		{
+			filePath = "\\MMO\\simlock\\lock";
+			break;
+		}
+		case 8:
+		{
+			filePath = "\\MMO\\product.dat";
+			break;
+		}
+		case 9:
+		{
+			filePath = "\\MMO\\certs\\hwc";
+			break;
+		}
+		case 10:
+		{
+			filePath = "\\MMO\\certs\\ccc";
+			break;
+		}
+		case 11:
+		{
+			filePath = "\\MMO\\certs\\npc";
+			break;
+		}
+		case 12:
+		{
+			filePath = "\\MMO\\certs\\rdc";
+			break;
+		}
+		case 13:
+		{
+			filePath = "\\MMO\\certs\\devcert.bin";
+			break;
+		}
+		case 14:
+		{
+			filePath = "\\MMO\\certs\\mirlink.bin";
+			break;
+		}
+		case 15:
+		{
+			filePath = "\\MMO\\RegScreen\\imagelabel_dark.png";
+			break;
+		}
+		case 16:
+		{
+			filePath = "\\MMO\\RegScreen\\imagelabel_light.png";
+			break;
+		}
+		case 17:
+		{
+			filePath = "\\MMO\\simlock\\unlock.bin";
+			break;
+		}
+		case 18:
+		{
+			filePath = "\\MMO\\ssdhash.bin";
+			break;
+		}
+		case 19:
+		{
+			filePath = "\\MMO\\certs\\label_data.bin";
+			break;
+		}
+		case 20:
+		{
+			filePath = "\\MMO\\RegScreen\\coo.txt";
+			break;
+		}
+		case 21:
+		{
+			filePath = "\\MMO\\imageimeibarcode.png";
+			break;
+		}
+		case 22:
+		{
+			filePath = "\\MMO\\fsghash.bin";
+			break;
+		}
+		case 23:
+		{
+			filePath = "\\MMO\\Label\\panel.ver";
+			break;
+		}
+		case 24:
+		{
+			filePath = "\\MMO\\Label\\label.ver";
+			break;
+		}
+		case 25:
+		{
+			filePath = "\\MMO\\testfile.txt";
+			break;
+		}
+		case 26:
+		{
+			filePath = "\\MMO\\testfilerestricted.txt";
+			break;
+		}
+		case 27:
+		{
+			filePath = "\\MMO\\Label\\panelmdcl.ver";
+			break;
+		}
+		case 28:
+		{
+			filePath = "\\MMO\\Label\\labelmdcl.ver";
+			break;
+		}
+		case 29:
+		{
+			filePath = "\\MMO\\simlock\\sign2";
+			break;
+		}
+	}
+
 	logFile << "\n";
-	logFile << a4;
+	logFile << "File name from ID: ";
+	logFile << filePath;
+	logFile << " -> ";
+	logFile << "C:\\DPP" + filePath;
 	logFile << "\n";
 
-	__int64 ret =  DppItemRead(a1, a2, a3, a4);
+	logFile << "Reading start";
+	logFile << "\n";
+
+	__int64 ret = 0;
+
+	try
+	{
+		ifstream ifs("C:\\DPP" + filePath, ios::binary | ios::in);
+		ifstream::pos_type pos = ifs.tellg();
+
+		ifs.seekg(0, ios::beg);
+		ifs.read(outputBuffer, bytecount);
+		ifs.close();
+	}
+	catch (int e)
+	{
+		logFile << "Exception: " << e << '\n';
+		ret = e;
+	}
+
+	logFile << "Reading end";
+	logFile << "\n";
 
 	logFile << "< NPETSEC_DppItemRead";
 	logFile << "\n";
-	logFile << ToString(ret);
-	logFile << "\n";
-
-	logFile << "Bypassing error by returning 0";
+	logFile << "Returning 0";
 	logFile << "\n";
 
 	logFile.close();
 
-	return 0;//ret;
+	return ret;
 }
 
-__int64 NPETSEC_ValidateMultiSim(__int64 a1, __int64 a2)
+__int64 NPETSEC_ValidateMultiSim(char* outputBuffer, char* Buffer2)
 {
-	LPNPETSEC_VALIDATEMULTISIM ValidateMultiSim = (LPNPETSEC_VALIDATEMULTISIM)GetProcAddress((HMODULE)hDLL, "NPETSEC_ValidateMultiSim");
-
 	logFile.open("C:\\RIL_NPETSEC.txt", std::ofstream::out | std::ofstream::app);
 	logFile << "> NPETSEC_ValidateMultiSim";
 	logFile << "\n";
-	logFile << ToString(a1);
-	logFile << "\n";
-	logFile << ToString(a2);
-	logFile << "\n";
 
-	__int64 ret = ValidateMultiSim(a1, a2);
+	logFile << sizeof(*outputBuffer) << "\n";
+	logFile << sizeof(*Buffer2) << "\n";
+
+	char  outputBuffer2[23];
+
+	char data[] = { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01, 0x00, 0x02, 0x01 };
+
+	/*outputBuffer2[0] = 0x00;
+	outputBuffer2[1] = 0x00;
+	outputBuffer2[2] = 0x00;
+	outputBuffer2[3] = 0x00;
+	outputBuffer2[4] = 0x01;
+	outputBuffer2[5] = 0x00;
+	outputBuffer2[6] = 0x00;
+	outputBuffer2[7] = 0x00;
+	outputBuffer2[8] = 0x01;
+	outputBuffer2[9] = 0x00;
+	outputBuffer2[10] = 0x00;
+	outputBuffer2[11] = 0x00;
+	outputBuffer2[12] = 0x01;
+	outputBuffer2[13] = 0x00;
+	outputBuffer2[14] = 0x00;
+	outputBuffer2[15] = 0x00;
+	outputBuffer2[16] = 0x00;
+	outputBuffer2[17] = 0x01;
+	outputBuffer2[18] = 0x01;
+	outputBuffer2[19] = 0x00;
+	outputBuffer2[20] = 0x01;
+	outputBuffer2[21] = 0x00;
+	outputBuffer2[22] = 0x02;
+	outputBuffer2[23] = 0x01;*/
+
+	Buffer2 = data;
+
+	logFile << sizeof(Buffer2) << "\n";
+	logFile << sizeof(*Buffer2) << "\n";
 
 	logFile << "< NPETSEC_ValidateMultiSim";
 	logFile << "\n";
-	logFile << ToString(ret);
 
-	logFile << "\n";
-	logFile << "Bypassing error by returning 0";
-
-	logFile << "\n";
 	logFile.close();
 
-	return 0;//ret;
+	return 0;
 }
 
 void    NPETSEC_Deinit()
