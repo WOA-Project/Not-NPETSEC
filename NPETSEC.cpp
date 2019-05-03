@@ -12,7 +12,6 @@ using namespace std;
 ofstream logFile;
 
 LPNPETSEC_INIT Init;
-LPNPETSEC_DPPITEMSIZE DppItemSize;
 LPNPETSEC_UNLOCKSIMLOCK UnlockSimlock;
 LPNPETSEC_GETSIMLOCKSTATUS GetSimlockStatus;
 LPNPETSEC_DEINIT Deinit;
