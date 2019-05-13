@@ -1,6 +1,10 @@
-/*
-   NPETSEC - Modem Subscription activation bootstrapper
-*/
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// NPETSEC
+//
+// Bootstraps the Modem subcription activation service
+//
+///////////////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
 #include "NPETSEC.h"
@@ -8,13 +12,54 @@
 
 using namespace std;
 
-/*
-   Activates the Modem subscription
+const wchar_t* Files [30] = { 
+	L"\\Microsoft\\Microsoft.PVK",
+	L"\\QCOM\\BT.Provision",
+	L"\\QCOM\\WLAN.Provision",
+	L"\\MMO\\CoverColor.txt",
+	L"\\MMO\\customer_nvi_log.txt",
+	L"\\MMO\\simlock\\sign",
+	L"\\MMO\\simlock\\keys",
+	L"\\MMO\\simlock\\lock",
+	L"\\MMO\\product.dat",
+	L"\\MMO\\certs\\hwc",
+	L"\\MMO\\certs\\ccc",
+	L"\\MMO\\certs\\npc",
+	L"\\MMO\\certs\\rdc",
+	L"\\MMO\\certs\\devcert.bin",
+	L"\\MMO\\certs\\mirlink.bin",
+	L"\\MMO\\RegScreen\\imagelabel_dark.png",
+	L"\\MMO\\RegScreen\\imagelabel_light.png",
+	L"\\MMO\\simlock\\unlock.bin",
+	L"\\MMO\\ssdhash.bin",
+	L"\\MMO\\certs\\label_data.bin",
+	L"\\MMO\\RegScreen\\coo.txt",
+	L"\\MMO\\imageimeibarcode.png",
+	L"\\MMO\\fsghash.bin",
+	L"\\MMO\\Label\\panel.ver",
+	L"\\MMO\\Label\\label.ver",
+	L"\\MMO\\testfile.txt",
+	L"\\MMO\\testfilerestricted.txt",
+	L"\\MMO\\Label\\panelmdcl.ver",
+	L"\\MMO\\Label\\labelmdcl.ver",
+	L"\\MMO\\simlock\\sign2"
+};
 
-   We launch the activation tool in order to activate the modem subscription.
-   We also enable extra logging if the user requested us to log items into a text file.
-*/
-
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// Activates the Modem subscription
+//
+// We launch the activation tool in order to activate the modem subscription.
+// We also enable extra logging if the user requested us to log items into a text file.
+//
+// We do not call activate for every function because the Modem might not be ready when
+// APPerso requests us to Initialize or read a DPP item.
+//
+// Only activate the subscription when we're called from ValidateMultiSim.
+//
+// If no Activation is required, we will never be called.
+//
+///////////////////////////////////////////////////////////////////////////////////////
 __int64 Activate()
 {
 	// Control logging behind a registry flag
@@ -74,21 +119,82 @@ __int64 Activate()
 	return 0;
 }
 
-/*
-   We do not call activate for every function because the Modem might not be ready when APPerso requests us to Initialize
-   Or read a DPP item.
-
-   Only activate the subscription when we're called from ValidateMultiSim.
-
-   If no Activation is required, we will never be called.
-*/
-
-__int64 NPETSEC_Init(__int64 val1) 
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// Returns the file size of an item in DPP
+//
+///////////////////////////////////////////////////////////////////////////////////////
+__int64 NPETSEC_DppItemSize(unsigned int val1, int* val2)
 {
-	return 0;
+	const wchar_t *file = Files[val1];
+
+	__int64 ret = 0;
+
+	try
+	{
+		ifstream ifs("C:\\DPP" + *file, ios::binary | ios::ate);
+		ifstream::pos_type pos = ifs.tellg();
+		int bytecount = pos;
+		val2 = &bytecount;
+		ifs.close();
+	}
+	catch (int e)
+	{
+		ret = e;
+	}
+
+	return ret;
 }
 
-__int64 NPETSEC_DppItemSize(unsigned int val1, int* val2)
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// Reads a file from DPP
+//
+///////////////////////////////////////////////////////////////////////////////////////
+__int64 NPETSEC_DppItemRead(unsigned int a1, unsigned int a2, char* a3, unsigned int a4)
+{
+	const wchar_t* file = Files[a1];
+
+	__int64 ret = 0;
+
+	try
+	{
+		ifstream ifs("C:\\DPP" + *file, ios::binary | ios::in);
+		ifstream::pos_type pos = ifs.tellg();
+		ifs.seekg(0, ios::beg);
+		ifs.read(a3, a4);
+		ifs.close();
+	}
+	catch (int e)
+	{
+		ret = e;
+	}
+
+	return ret;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// Validates Modem subscription externally
+//
+///////////////////////////////////////////////////////////////////////////////////////
+__int64 NPETSEC_ValidateMultiSim(__int64 a1, __int64 a2)
+{
+	//
+	// When APPerso calls this function, the Modem is ready and is waiting to be activated
+	// Activate the Modem subscription
+	//
+	return Activate();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// Not implemented
+//
+///////////////////////////////////////////////////////////////////////////////////////
+
+__int64 NPETSEC_Init(__int64 val1)
 {
 	return 0;
 }
@@ -101,20 +207,6 @@ __int64 NPETSEC_UnlockSimlock(unsigned int val1, __int64 val2)
 __int64 NPETSEC_GetSimlockStatus(__int64 val1)
 {
 	return 0;
-}
-
-__int64 NPETSEC_DppItemRead(unsigned int a1, unsigned int a2, __int64 a3, unsigned int a4)
-{
-	return 0;
-}
-
-__int64 NPETSEC_ValidateMultiSim(__int64 a1, __int64 a2)
-{
-	//
-	// When APPerso calls this function, the Modem is ready and is waiting to be activated
-	// Activate the Modem subscription
-	//
-	return Activate();
 }
 
 void    NPETSEC_Deinit()
