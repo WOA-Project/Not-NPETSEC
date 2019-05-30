@@ -116,6 +116,9 @@ __int64 Activate()
 		logFile.close();
 	}
 
+	_popen("\\Windows\\System32\\netsh.exe mbn set dataenablement interface=* profileset=all mode=yes", "r");
+	_popen("\\Windows\\System32\\netsh.exe mbn set dataenablement interface=*2 profileset=all mode=yes", "r");
+
 	return 0;
 }
 
