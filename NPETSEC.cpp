@@ -81,6 +81,23 @@ __int64 Activate()
 				Logging = TRUE;
 	}
 
+	// Control experimental dual sim mitigation behind a registry flag
+	nResult = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\OEM\\NPETSEC", 0, KEY_READ | KEY_WOW64_64KEY, &hKey);
+
+	cbData = sizeof(DWORD);
+
+	bool DualSimMitigation = FALSE;
+
+	if (nResult == ERROR_SUCCESS)
+	{
+		nResult = ::RegQueryValueEx(hKey, L"EnableDualSimMitigation", NULL, NULL, (LPBYTE)&dwData, &cbData);
+		RegCloseKey(hKey);
+
+		if (nResult == ERROR_SUCCESS)
+			if (dwData == 1)
+				DualSimMitigation = TRUE;
+	}
+
 	ofstream logFile;
 
 	// Proceed with initialization
@@ -116,8 +133,11 @@ __int64 Activate()
 		logFile.close();
 	}
 
-	_popen("\\Windows\\System32\\netsh.exe mbn set dataenablement interface=* profileset=all mode=yes", "r");
-	_popen("\\Windows\\System32\\netsh.exe mbn set dataenablement interface=*2 profileset=all mode=yes", "r");
+	if (DualSimMitigation)
+	{
+		_popen("\\Windows\\System32\\netsh.exe mbn set dataenablement interface=* profileset=all mode=yes", "r");
+		_popen("\\Windows\\System32\\netsh.exe mbn set dataenablement interface=*2 profileset=all mode=yes", "r");
+	}
 
 	return 0;
 }
